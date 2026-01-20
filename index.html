@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="人生RPG">
+  <meta name="theme-color" content="#0a0a0f">
+  <title>🎮 人生RPG</title>
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230a0a0f' width='100' height='100' rx='20'/><text y='65' x='50' text-anchor='middle' font-size='50'>🎮</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.8);
+      --text-primary: #fff;
+      --text-secondary: #9ca3af;
+      --gold: #fcd34d;
+      --green: #4ade80;
+      --blue: #60a5fa;
+      --red: #f87171;
+      --purple: #a78bfa;
+      --orange: #fb923c;
+      --cyan: #22d3ee;
+    }
+    
+    body {
+      font-family: 'DotGothic16', sans-serif;
+      background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      overflow-x: hidden;
+    }
+    
+    .pixel-font { font-family: 'Press Start 2P', monospace; }
+    
+    .nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-around;
+      background: rgba(10, 10, 15, 0.95);
+      border-top: 2px solid #374151;
+      padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+    
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 16px;
+      border: none;
+      background: none;
+      color: var(--text-secondary);
+      font-size: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .nav-item.active { color: var(--gold); }
+    .nav-item span { font-size: 20px; }
+    
+    .main { padding: 16px 16px 100px; max-width: 500px; margin: 0 auto; }
+    
+    .screen { display: none; animation: fadeIn 0.3s ease; }
+    .screen.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .header-card {
+      background: linear-gradient(135deg, rgba(250,204,21,0.1) 0%, rgba(0,0,0,0.6) 100%);
+      border: 2px solid var(--gold);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 0 20px rgba(250,204,21,0.15);
+    }
+    
+    .player-info { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .player-name { font-size: 18px; font-weight: bold; }
+    .player-level { color: var(--gold); font-size: 12px; }
+    .chapter { color: var(--text-secondary); font-size: 11px; margin-top: 4px; }
+    
+    .stat-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .stat-label { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 4px; }
+    .stat-label .label { display: flex; align-items: center; gap: 4px; }
+    
+    .progress-container {
+      height: 16px;
+      background: #1f2937;
+      border: 2px solid #374151;
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      transition: width 0.5s ease, background 0.3s;
+      position: relative;
+    }
+    
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 50%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 100%);
+    }
+    
+    .status-row { display: flex; justify-content: space-between; align-items: center; }
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      border: 1px solid;
+    }
+    
+    .weekly-abp { text-align: right; }
+    .weekly-abp .label { font-size: 10px; color: var(--text-secondary); }
+    .weekly-abp .value { font-size: 14px; }
+    
+    .section-card {
+      background: var(--bg-card);
+      border: 2px solid;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .section-title {
+      font-size: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .section-title-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .quest-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #374151;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .quest-item:active { transform: scale(0.98); }
+    .quest-item.completed { border-color: var(--green); background: rgba(74,222,128,0.1); }
+    .quest-item.completed .quest-text { text-decoration: line-through; color: var(--text-secondary); }
+    
+    .quest-check { font-size: 20px; }
+    .quest-content { flex: 1; }
+    .quest-text { font-size: 13px; }
+    .quest-job { font-size: 9px; margin-top: 2px; }
+    .quest-level {
+      font-size: 9px;
+      padding: 4px 8px;
+      background: rgba(250,204,21,0.2);
+      color: var(--gold);
+      border-radius: 10px;
+    }
+    
+    .quest-delete {
+      padding: 4px 8px;
+      background: rgba(239,68,68,0.2);
+      border: 1px solid var(--red);
+      border-radius: 4px;
+      color: var(--red);
+      font-size: 10px;
+      cursor: pointer;
+    }
+    
+    .add-quest-btn {
+      width: 100%;
+      padding: 12px;
+      border: 2px dashed #374151;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .add-quest-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+    
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 200;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      animation: fadeIn 0.2s;
+    }
+    
+    .modal-content {
+      background: var(--bg-secondary);
+      border-top: 2px solid var(--cyan);
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 500px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 20px;
+      animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #374151;
+    }
+    
+    .modal-title { font-size: 16px; color: var(--cyan); }
+    
+    .modal-close {
+      padding: 8px 16px;
+      background: rgba(239,68,68,0.2);
+      border: 1px solid var(--red);
+      border-radius: 6px;
+      color: var(--red);
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    .crystal-section {
+      margin-bottom: 20px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.3);
+    }
+    
+    .crystal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #374151;
+    }
+    
+    .crystal-icon {
+      width: 16px;
+      height: 16px;
+      transform: rotate(45deg);
+      border: 2px solid;
+    }
+    
+    .crystal-name { font-size: 12px; font-weight: bold; }
+    
+    .ability-list { display: flex; flex-direction: column; gap: 8px; }
+    
+    .ability-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border: 2px solid #374151;
+      border-radius: 8px;
+      background: rgba(0,0,0,0.3);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .ability-item:active { transform: scale(0.98); }
+    .ability-item:hover { border-color: var(--cyan); }
+    
+    .ability-icon { font-size: 20px; }
+    .ability-content { flex: 1; }
+    .ability-name { font-size: 13px; }
+    .ability-desc { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+    .ability-level {
+      font-size: 9px;
+      padding: 4px 10px;
+      border-radius: 10px;
+    }
+    
+    .job-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    
+    .job-card {
+      padding: 12px;
+      background: rgba(0,0,0,0.4);
+      border: 2px solid #374151;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .job-card:active { transform: scale(0.95); }
+    .job-card.selected { border-color: var(--gold); box-shadow: 0 0 15px rgba(250,204,21,0.3); }
+    .job-card.locked { opacity: 0.5; pointer-events: none; }
+    
+    .job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .job-name { font-size: 13px; font-weight: bold; }
+    .job-stars { font-size: 10px; letter-spacing: -2px; }
+    .job-skill { font-size: 9px; color: var(--text-secondary); margin-bottom: 6px; }
+    .job-status { font-size: 8px; }
+    
+    .job-progress {
+      height: 6px;
+      background: #1f2937;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    
+    .job-progress-fill { height: 100%; transition: width 0.3s; }
+    
+    .abp-display {
+      text-align: center;
+      padding: 24px;
+      background: linear-gradient(135deg, rgba(74,222,128,0.1) 0%, rgba(0,0,0,0.6) 100%);
+      border: 2px solid var(--green);
+      border-radius: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .abp-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+    .abp-value { font-size: 36px; color: var(--green); text-shadow: 0 0 20px rgba(74,222,128,0.5); }
+    .abp-total { font-size: 11px; color: var(--text-secondary); margin-top: 8px; }
+    
+    .abp-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+    
+    .abp-btn {
+      padding: 20px;
+      border: 2px solid;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.5);
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .abp-btn:active { transform: scale(0.9); }
+    .abp-btn.lv1 { border-color: var(--green); color: var(--green); }
+    .abp-btn.lv2 { border-color: var(--blue); color: var(--blue); }
+    .abp-btn.lv3 { border-color: var(--gold); color: var(--gold); }
+    .abp-btn.lv4 { border-color: var(--orange); color: var(--orange); }
+    .abp-btn.lv5 { border-color: var(--purple); color: var(--purple); }
+    
+    .abp-btn-label { font-size: 9px; margin-top: 4px; display: block; opacity: 0.7; }
+    
+    .selected-job-display {
+      background: rgba(250,204,21,0.1);
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .selected-job-name { font-size: 14px; font-weight: bold; color: var(--gold); }
+    .selected-job-abp { font-size: 11px; color: var(--text-secondary); }
+    
+    .adjust-section { margin-bottom: 20px; }
+    .adjust-label { font-size: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .adjust-buttons { display: flex; gap: 8px; }
+    
+    .adjust-btn {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #374151;
+      border-radius: 8px;
+      background: rgba(0,0,0,0.3);
+      color: var(--text-primary);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .adjust-btn:active { transform: scale(0.95); }
+    .adjust-btn.hp { border-color: var(--red); }
+    .adjust-btn.mp { border-color: var(--blue); }
+    
+    .crystal-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    
+    .crystal-tab {
+      padding: 8px 16px;
+      border: 2px solid;
+      border-radius: 20px;
+      background: rgba(0,0,0,0.5);
+      font-size: 11px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .crystal-tab.active { box-shadow: 0 0 15px currentColor; }
+    
+    .level-up-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.3s;
+    }
+    
+    .level-up-text {
+      font-size: 24px;
+      color: var(--gold);
+      text-shadow: 0 0 30px var(--gold);
+      animation: pulse 0.5s ease infinite alternate;
+      text-align: center;
+    }
+    
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+    
+    .level-up-job { font-size: 18px; color: var(--text-primary); margin-top: 16px; }
+    .level-up-stars { font-size: 32px; margin-top: 12px; }
+    .level-up-close { margin-top: 32px; padding: 12px 32px; background: var(--gold); color: #000; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+    
+    .north-star {
+      text-align: center;
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(147,51,234,0.15) 0%, rgba(0,0,0,0.6) 100%);
+      border: 2px solid var(--purple);
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .north-star-label { font-size: 10px; color: var(--text-secondary); margin-bottom: 8px; }
+    .north-star-text { font-size: 16px; color: var(--purple); text-shadow: 0 0 20px rgba(147,51,234,0.5); }
+    
+    .title-display {
+      text-align: center;
+      padding: 16px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid #374151;
+      border-radius: 8px;
+    }
+    
+    .title-label { font-size: 10px; color: var(--text-secondary); margin-bottom: 4px; }
+    .title-text { font-size: 14px; color: var(--gold); }
+    
+    .toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.95);
+      border: 2px solid var(--green);
+      border-radius: 12px;
+      padding: 20px 32px;
+      z-index: 500;
+      animation: toastIn 0.3s ease;
+      text-align: center;
+    }
+    
+    @keyframes toastIn {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    
+    .toast-icon { font-size: 32px; margin-bottom: 8px; }
+    .toast-text { font-size: 14px; }
+    .toast-abp { font-size: 20px; color: var(--green); margin-top: 8px; }
+    
+    .hidden { display: none !important; }
+    
+    .empty-state {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+    
+    /* Decay Info */
+    .decay-info {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid var(--red);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 11px;
+    }
+    
+    .decay-info-title {
+      color: var(--red);
+      font-weight: bold;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .decay-info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      color: var(--text-secondary);
+    }
+    
+    .decay-info-value {
+      color: var(--text-primary);
+    }
+    
+    .decay-prevented {
+      color: var(--green) !important;
+    }
+  </style>
+</head>
+<body>
+  <main class="main">
+    <!-- HOME SCREEN -->
+    <div id="screen-home" class="screen active">
+      <div class="header-card">
+        <div class="player-info">
+          <div>
+            <div class="player-name">中村昌弘</div>
+            <div class="player-level pixel-font">Lv.<span id="player-level">40</span></div>
+            <div class="chapter">Chapter 5: 統合と選択</div>
+          </div>
+          <div style="text-align: right; font-size: 10px; color: var(--text-secondary);">
+            <div id="current-date"></div>
+            <div id="current-time" class="pixel-font" style="font-size: 8px; margin-top: 4px;"></div>
+          </div>
+        </div>
+        
+        <div class="stat-bars">
+          <div class="stat-bar">
+            <div class="stat-label">
+              <span class="label">❤️ HP</span>
+              <span id="hp-value" style="color: var(--green);">72%</span>
+            </div>
+            <div class="progress-container">
+              <div id="hp-bar" class="progress-fill" style="width: 72%; background: var(--green);"></div>
+            </div>
+          </div>
+          <div class="stat-bar">
+            <div class="stat-label">
+              <span class="label">💎 MP</span>
+              <span id="mp-value" style="color: var(--blue);">65%</span>
+            </div>
+            <div class="progress-container">
+              <div id="mp-bar" class="progress-fill" style="width: 65%; background: var(--blue);"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="status-row">
+          <div id="status-badge" class="status-badge" style="border-color: var(--green); color: var(--green); background: rgba(74,222,128,0.1);">
+            絶好調
+          </div>
+          <div class="weekly-abp">
+            <div class="label">今週のABP</div>
+            <div class="value pixel-font" style="color: var(--gold);">🎯 <span id="weekly-abp">12</span> / 15</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Decay Info Card -->
+      <div id="decay-info" class="decay-info hidden">
+        <div class="decay-info-title">⚠️ 昨日の減衰</div>
+        <div class="decay-info-row">
+          <span>基本減衰:</span>
+          <span class="decay-info-value" id="decay-base">HP -5, MP -5</span>
+        </div>
+        <div class="decay-info-row">
+          <span>行動による軽減:</span>
+          <span class="decay-info-value decay-prevented" id="decay-prevented">+0</span>
+        </div>
+        <div class="decay-info-row">
+          <span>実際の減衰:</span>
+          <span class="decay-info-value" id="decay-actual">HP -5, MP -5</span>
+        </div>
+      </div>
+      
+      <div class="section-card" style="border-color: var(--cyan);">
+        <div class="section-title" style="color: var(--cyan);">
+          <div class="section-title-left">
+            <span>🌟</span>
+            <span class="pixel-font" style="font-size: 10px;">TODAY'S QUEST</span>
+          </div>
+          <span id="quest-count" style="font-size: 10px; color: var(--text-secondary);">0/3</span>
+        </div>
+        <div id="quest-list"></div>
+        <button class="add-quest-btn" onclick="openQuestModal()">
+          ＋ クエストを追加
+        </button>
+      </div>
+      
+      <div class="section-card" style="border-color: var(--orange);">
+        <div class="section-title" style="color: var(--orange);">
+          <div class="section-title-left">
+            <span>🔥</span>
+            <span class="pixel-font" style="font-size: 10px;">育成中ジョブ</span>
+          </div>
+        </div>
+        <div id="training-jobs" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+      </div>
+      
+      <div class="north-star">
+        <div class="north-star-label">🧭 北極星</div>
+        <div class="north-star-text">「火を灯し続ける」</div>
+      </div>
+      
+      <div class="title-display">
+        <div class="title-label">現在の称号</div>
+        <div class="title-text pixel-font" style="font-size: 11px;">「折れずに続けた人」</div>
+      </div>
+    </div>
+    
+    <!-- JOBS SCREEN -->
+    <div id="screen-jobs" class="screen">
+      <h2 style="font-size: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>⚔️</span> ジョブ一覧
+      </h2>
+      <div class="crystal-tabs" id="crystal-tabs"></div>
+      <div id="job-grid" class="job-grid"></div>
+    </div>
+    
+    <!-- ABP SCREEN -->
+    <div id="screen-abp" class="screen">
+      <h2 style="font-size: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>⚡</span> ABP記録
+      </h2>
+      
+      <div id="selected-job-section">
+        <div class="selected-job-display">
+          <div class="selected-job-info">
+            <div class="selected-job-name" id="selected-job-name">ジョブを選択</div>
+            <div class="selected-job-abp" id="selected-job-abp">ABP: --/--</div>
+          </div>
+          <button onclick="showScreen('jobs')" style="padding: 8px 16px; background: var(--gold); color: #000; border: none; border-radius: 6px; font-size: 11px; cursor: pointer;">変更</button>
+        </div>
+      </div>
+      
+      <div class="abp-display">
+        <div class="abp-label">今日のABP</div>
+        <div class="abp-value pixel-font" id="today-abp">0</div>
+        <div class="abp-total">累計: <span id="total-abp">6,380</span> ABP</div>
+      </div>
+      
+      <div class="abp-buttons">
+        <button class="abp-btn lv1" onclick="addAbp(1)">+1<span class="abp-btn-label">Lv1</span></button>
+        <button class="abp-btn lv2" onclick="addAbp(3)">+3<span class="abp-btn-label">Lv2</span></button>
+        <button class="abp-btn lv3" onclick="addAbp(5)">+5<span class="abp-btn-label">Lv3</span></button>
+      </div>
+      <div class="abp-buttons">
+        <button class="abp-btn lv4" onclick="addAbp(8)">+8<span class="abp-btn-label">Lv4</span></button>
+        <button class="abp-btn lv5" onclick="addAbp(13)">+13<span class="abp-btn-label">Lv5</span></button>
+      </div>
+      
+      <div class="section-card" style="border-color: #374151; margin-top: 16px;">
+        <div class="section-title" style="color: var(--text-secondary);">
+          <div class="section-title-left">
+            <span>📋</span> 今日の行動ログ
+          </div>
+        </div>
+        <div id="action-log" style="font-size: 12px; color: var(--text-secondary);">
+          まだ記録がありません
+        </div>
+      </div>
+    </div>
+    
+    <!-- STATUS SCREEN -->
+    <div id="screen-status" class="screen">
+      <h2 style="font-size: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>📊</span> ステータス調整
+      </h2>
+      
+      <!-- Decay Explanation -->
+      <div class="section-card" style="border-color: var(--orange); margin-bottom: 20px;">
+        <div class="section-title" style="color: var(--orange);">
+          <div class="section-title-left">
+            <span>📉</span> HP/MP 自動減衰システム
+          </div>
+        </div>
+        <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.6;">
+          <p style="margin-bottom: 8px;">毎日0時に HP/MP が自動で減少します。</p>
+          <p style="margin-bottom: 8px;"><strong style="color: var(--red);">基本減衰:</strong> HP -5, MP -5</p>
+          <p style="margin-bottom: 8px;"><strong style="color: var(--green);">行動による軽減:</strong></p>
+          <ul style="margin-left: 16px; margin-bottom: 8px;">
+            <li>今日のABP 5以上 → 減衰 -2</li>
+            <li>今日のABP 10以上 → 減衰 -3</li>
+            <li>今日のABP 15以上 → 減衰なし</li>
+          </ul>
+          <p style="color: var(--cyan);">💡 毎日少しでも行動することで、状態を維持できます。</p>
+        </div>
+      </div>
+      
+      <div class="adjust-section">
+        <div class="adjust-label">❤️ HP (体力・回復力)</div>
+        <div class="adjust-buttons">
+          <button class="adjust-btn hp" onclick="adjustStat('hp', -10)">-10</button>
+          <button class="adjust-btn hp" onclick="adjustStat('hp', -5)">-5</button>
+          <button class="adjust-btn hp" onclick="adjustStat('hp', 5)">+5</button>
+          <button class="adjust-btn hp" onclick="adjustStat('hp', 10)">+10</button>
+        </div>
+        <div style="margin-top: 8px; font-size: 10px; color: var(--text-secondary);">
+          HP &lt;50%: 無理しない / HP &lt;30%: Lv1のみ許可
+        </div>
+      </div>
+      
+      <div class="adjust-section">
+        <div class="adjust-label">💎 MP (精神的余白)</div>
+        <div class="adjust-buttons">
+          <button class="adjust-btn mp" onclick="adjustStat('mp', -10)">-10</button>
+          <button class="adjust-btn mp" onclick="adjustStat('mp', -5)">-5</button>
+          <button class="adjust-btn mp" onclick="adjustStat('mp', 5)">+5</button>
+          <button class="adjust-btn mp" onclick="adjustStat('mp', 10)">+10</button>
+        </div>
+        <div style="margin-top: 8px; font-size: 10px; color: var(--text-secondary);">
+          MP &lt;50%: 考えない / MP &lt;30%: 判断系禁止
+        </div>
+      </div>
+      
+      <div class="section-card" style="border-color: var(--green); margin-top: 24px;">
+        <div class="section-title" style="color: var(--green);">
+          <div class="section-title-left">
+            <span>💚</span> 回復行動
+          </div>
+        </div>
+        <div style="display: grid; gap: 8px;">
+          <button class="quest-item" onclick="doRecovery('sleep', 30, 0)" style="border-color: var(--green);">
+            <span>😴</span>
+            <span class="quest-content"><span class="quest-text">7時間以上睡眠</span></span>
+            <span style="color: var(--green); font-size: 11px;">HP +30</span>
+          </button>
+          <button class="quest-item" onclick="doRecovery('nap', 10, 0)" style="border-color: var(--green);">
+            <span>💤</span>
+            <span class="quest-content"><span class="quest-text">仮眠20分</span></span>
+            <span style="color: var(--green); font-size: 11px;">HP +10</span>
+          </button>
+          <button class="quest-item" onclick="doRecovery('meditate', 0, 10)" style="border-color: var(--blue);">
+            <span>🧘</span>
+            <span class="quest-content"><span class="quest-text">瞑想5分</span></span>
+            <span style="color: var(--blue); font-size: 11px;">MP +10</span>
+          </button>
+          <button class="quest-item" onclick="doRecovery('walk', 10, 5)" style="border-color: var(--cyan);">
+            <span>🚶</span>
+            <span class="quest-content"><span class="quest-text">散歩10分</span></span>
+            <span style="color: var(--cyan); font-size: 11px;">HP+10 MP+5</span>
+          </button>
+          <button class="quest-item" onclick="doRecovery('bath', 0, 15)" style="border-color: var(--purple);">
+            <span>🛁</span>
+            <span class="quest-content"><span class="quest-text">入浴・音楽</span></span>
+            <span style="color: var(--purple); font-size: 11px;">MP +15</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <nav class="nav">
+    <button class="nav-item active" onclick="showScreen('home')" data-screen="home">
+      <span>🏠</span>HOME
+    </button>
+    <button class="nav-item" onclick="showScreen('jobs')" data-screen="jobs">
+      <span>⚔️</span>JOBS
+    </button>
+    <button class="nav-item" onclick="showScreen('abp')" data-screen="abp">
+      <span>⚡</span>ABP
+    </button>
+    <button class="nav-item" onclick="showScreen('status')" data-screen="status">
+      <span>📊</span>STATUS
+    </button>
+  </nav>
+  
+  <div id="quest-modal" class="modal-overlay hidden" onclick="closeQuestModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">🌟 クエストを追加</div>
+        <button class="modal-close" onclick="closeQuestModal()">✕ 閉じる</button>
+      </div>
+      <div id="quest-modal-content"></div>
+    </div>
+  </div>
+  
+  <div id="toast" class="toast hidden">
+    <div class="toast-icon">⚡</div>
+    <div class="toast-text">ABP獲得!</div>
+    <div class="toast-abp pixel-font">+0</div>
+  </div>
+  
+  <div id="level-up-overlay" class="level-up-overlay hidden">
+    <div class="level-up-text pixel-font">🎉 LEVEL UP!</div>
+    <div class="level-up-job" id="level-up-job">父親</div>
+    <div class="level-up-stars" id="level-up-stars">★★☆ → ★★★</div>
+    <button class="level-up-close" onclick="closeLevelUp()">OK</button>
+  </div>
+
+  <script>
+    const jobAbilities = {
+      son: {
+        name: "息子",
+        abilities: [
+          { name: "親に連絡する", desc: "電話・LINE・訪問", level: 1, icon: "📞" },
+          { name: "親の話を聴く", desc: "傾聴・共感", level: 2, icon: "👂" },
+          { name: "親孝行をする", desc: "贈り物・サポート", level: 3, icon: "🎁" },
+          { name: "家系の橋渡し", desc: "親戚との関係構築", level: 4, icon: "🌉" },
+        ]
+      },
+      grandchild: {
+        name: "孫",
+        abilities: [
+          { name: "祖父母に連絡", desc: "電話・手紙・訪問", level: 1, icon: "📱" },
+          { name: "一緒に過ごす", desc: "時間を共有", level: 2, icon: "👴" },
+          { name: "思い出を作る", desc: "イベント・旅行", level: 3, icon: "📸" },
+          { name: "安心を与える", desc: "存在で支える", level: 4, icon: "💝" },
+        ]
+      },
+      brother: {
+        name: "兄",
+        abilities: [
+          { name: "弟妹に連絡", desc: "近況確認", level: 1, icon: "📲" },
+          { name: "相談に乗る", desc: "アドバイス", level: 2, icon: "💬" },
+          { name: "一緒に何かする", desc: "食事・遊び", level: 3, icon: "🍻" },
+          { name: "人生の伴走", desc: "長期的サポート", level: 4, icon: "🤝" },
+        ]
+      },
+      husband: {
+        name: "夫",
+        abilities: [
+          { name: "日常会話", desc: "1日の出来事を共有", level: 1, icon: "💬" },
+          { name: "家事分担", desc: "積極的に担当", level: 2, icon: "🏠" },
+          { name: "深い対話", desc: "価値観・将来について", level: 3, icon: "💑" },
+          { name: "共同決断", desc: "人生の重要決定", level: 4, icon: "🎯" },
+          { name: "記念日を祝う", desc: "感謝を形に", level: 3, icon: "🎂" },
+        ]
+      },
+      father: {
+        name: "父親",
+        abilities: [
+          { name: "子どもと話す", desc: "10分の対話", level: 1, icon: "👨‍👧" },
+          { name: "一緒に遊ぶ", desc: "遊び・勉強を見る", level: 2, icon: "🎮" },
+          { name: "1on1対話", desc: "深い会話・相談", level: 3, icon: "💭" },
+          { name: "挑戦を後押し", desc: "子の決断を支援", level: 4, icon: "🚀" },
+          { name: "背中で語る", desc: "行動で示す", level: 5, icon: "🌟" },
+        ]
+      },
+      meditator: {
+        name: "メディテーター",
+        abilities: [
+          { name: "呼吸を整える", desc: "3分の深呼吸", level: 1, icon: "🌬️" },
+          { name: "瞑想5分", desc: "座って集中", level: 2, icon: "🧘" },
+          { name: "感情を観察", desc: "感情の言語化", level: 3, icon: "👁️" },
+          { name: "状態を整える", desc: "自己調整", level: 4, icon: "⚖️" },
+          { name: "静寂を保つ", desc: "長時間の集中", level: 5, icon: "🔮" },
+        ]
+      },
+      kickboxer: {
+        name: "キックボクサー",
+        abilities: [
+          { name: "ストレッチ", desc: "10分の柔軟", level: 1, icon: "🤸" },
+          { name: "シャドー", desc: "基本動作練習", level: 2, icon: "👊" },
+          { name: "ジム練習", desc: "本格トレーニング", level: 3, icon: "🥊" },
+          { name: "スパーリング", desc: "実戦練習", level: 4, icon: "💥" },
+          { name: "試合出場", desc: "本番", level: 5, icon: "🏆" },
+        ]
+      },
+      bassist: {
+        name: "ベーシスト",
+        abilities: [
+          { name: "弦に触れる", desc: "5分だけ弾く", level: 1, icon: "🎸" },
+          { name: "基礎練習", desc: "スケール・運指", level: 2, icon: "🎵" },
+          { name: "曲を練習", desc: "1曲通す", level: 3, icon: "🎶" },
+          { name: "グルーヴ研究", desc: "リズム感を磨く", level: 4, icon: "🎤" },
+        ]
+      },
+      engineer: {
+        name: "技術士",
+        abilities: [
+          { name: "技術記事を読む", desc: "インプット", level: 1, icon: "📖" },
+          { name: "論文・資料作成", desc: "構造化アウトプット", level: 2, icon: "📝" },
+          { name: "技術検討", desc: "課題解決", level: 3, icon: "🔧" },
+          { name: "若手指導", desc: "知識を伝える", level: 4, icon: "👨‍🏫" },
+          { name: "思想を体系化", desc: "哲学レベル", level: 5, icon: "🏛️" },
+        ]
+      },
+      linemarketer: {
+        name: "LINEマーケター",
+        abilities: [
+          { name: "配信確認", desc: "データチェック", level: 1, icon: "📊" },
+          { name: "メッセージ作成", desc: "コンテンツ制作", level: 2, icon: "✍️" },
+          { name: "導線設計", desc: "フロー改善", level: 3, icon: "🔀" },
+          { name: "戦略立案", desc: "全体設計", level: 4, icon: "📈" },
+          { name: "仕組み化", desc: "再現可能に", level: 5, icon: "⚙️" },
+        ]
+      },
+      employee: {
+        name: "会社員（一般）",
+        abilities: [
+          { name: "日常業務", desc: "ルーティンワーク", level: 1, icon: "💼" },
+          { name: "報連相", desc: "コミュニケーション", level: 2, icon: "📢" },
+          { name: "課題解決", desc: "問題対応", level: 3, icon: "🎯" },
+          { name: "プロジェクト推進", desc: "チームを動かす", level: 4, icon: "🚀" },
+        ]
+      },
+      manager: {
+        name: "会社員（管理）",
+        abilities: [
+          { name: "状況把握", desc: "現状確認", level: 2, icon: "👀" },
+          { name: "意思決定", desc: "判断を下す", level: 3, icon: "⚖️" },
+          { name: "合意形成", desc: "チームをまとめる", level: 4, icon: "🤝" },
+          { name: "経営視点", desc: "全体最適", level: 5, icon: "🏢" },
+        ]
+      },
+      coach: {
+        name: "コーチ",
+        abilities: [
+          { name: "話を聴く", desc: "傾聴", level: 1, icon: "👂" },
+          { name: "問いを投げる", desc: "気づきを促す", level: 2, icon: "❓" },
+          { name: "行動設計", desc: "アクションプラン", level: 3, icon: "📋" },
+          { name: "人生変化を起こす", desc: "深い変容", level: 4, icon: "🦋" },
+          { name: "モデル化", desc: "再現可能に", level: 5, icon: "📐" },
+        ]
+      },
+      investor: {
+        name: "投資家",
+        abilities: [
+          { name: "情報収集", desc: "市場調査", level: 1, icon: "📰" },
+          { name: "分析", desc: "データ検討", level: 2, icon: "📊" },
+          { name: "投資実行", desc: "意思決定", level: 3, icon: "💰" },
+          { name: "ポートフォリオ管理", desc: "資産配分", level: 4, icon: "🎰" },
+        ]
+      },
+      entrepreneur: {
+        name: "起業家",
+        abilities: [
+          { name: "アイデア出し", desc: "構想を練る", level: 1, icon: "💡" },
+          { name: "副業活動", desc: "小さく始める", level: 2, icon: "🌱" },
+          { name: "仕組み構築", desc: "システム化", level: 3, icon: "⚙️" },
+          { name: "事業拡大", desc: "スケール", level: 4, icon: "📈" },
+          { name: "自走組織", desc: "自分なしで回る", level: 5, icon: "🏭" },
+        ]
+      },
+      ceo: {
+        name: "経営者",
+        abilities: [
+          { name: "意思決定", desc: "判断を下す", level: 3, icon: "⚖️" },
+          { name: "人を動かす", desc: "リーダーシップ", level: 4, icon: "👥" },
+          { name: "責任を取る", desc: "失敗を背負う", level: 4, icon: "🎖️" },
+          { name: "組織設計", desc: "構造を作る", level: 5, icon: "🏗️" },
+          { name: "権限委譲", desc: "任せる", level: 5, icon: "🔑" },
+        ]
+      },
+      friend: {
+        name: "友人",
+        abilities: [
+          { name: "連絡を取る", desc: "近況報告", level: 1, icon: "📱" },
+          { name: "会って話す", desc: "食事・対話", level: 2, icon: "☕" },
+          { name: "深い相談", desc: "本音を話す", level: 3, icon: "💬" },
+          { name: "人生を支え合う", desc: "節目で寄り添う", level: 4, icon: "🤝" },
+        ]
+      },
+    };
+
+    // 減衰設定
+    const DECAY_CONFIG = {
+      baseHpDecay: 5,      // 基本HP減衰
+      baseMpDecay: 5,      // 基本MP減衰
+      thresholds: [        // ABPによる軽減閾値
+        { abp: 15, reduction: 5 },  // 15ABP以上: 減衰なし
+        { abp: 10, reduction: 3 },  // 10ABP以上: -3軽減
+        { abp: 5, reduction: 2 },   // 5ABP以上: -2軽減
+      ]
+    };
+
+    let state = {
+      hp: 72,
+      mp: 65,
+      weeklyAbp: 12,
+      todayAbp: 0,
+      totalAbp: 6380,
+      selectedJob: null,
+      actionLog: [],
+      quests: [],
+      lastDecayInfo: null,  // 減衰情報を保存
+      yesterdayAbp: 0,      // 昨日のABP
+      jobs: {
+        family: {
+          name: "風のクリスタル",
+          subtitle: "家族・血縁",
+          color: "#4ade80",
+          jobs: [
+            { id: "son", name: "息子", stars: 3, maxStars: 3, level: 40, abp: 999, maxAbp: 999, status: "master", skill: "傾聴・感謝" },
+            { id: "grandchild", name: "孫", stars: 3, maxStars: 3, level: 40, abp: 999, maxAbp: 999, status: "master", skill: "共感・場づくり" },
+            { id: "brother", name: "兄", stars: 3, maxStars: 3, level: 37, abp: 999, maxAbp: 999, status: "master", skill: "見守り" },
+            { id: "husband", name: "夫", stars: 3, maxStars: 3, level: 2, abp: 300, maxAbp: 300, status: "master", skill: "対話・決断" },
+            { id: "father", name: "父親", stars: 2, maxStars: 3, level: 1, abp: 145, maxAbp: 300, status: "training", skill: "背中で語る" },
+          ]
+        },
+        mind: {
+          name: "水のクリスタル",
+          subtitle: "心身・調和",
+          color: "#60a5fa",
+          jobs: [
+            { id: "meditator", name: "メディテーター", stars: 3, maxStars: 3, level: 1, abp: 300, maxAbp: 300, status: "master", skill: "観察・呼吸" },
+            { id: "kickboxer", name: "キックボクサー", stars: 1, maxStars: 3, level: 0, abp: 15, maxAbp: 120, status: "training", skill: "身体操作" },
+            { id: "bassist", name: "ベーシスト", stars: 1, maxStars: 3, level: 0, abp: 30, maxAbp: 120, status: "休止", skill: "リズム感" },
+          ]
+        },
+        work: {
+          name: "火のクリスタル",
+          subtitle: "仕事・専門性",
+          color: "#f87171",
+          jobs: [
+            { id: "engineer", name: "技術士", stars: 3, maxStars: 3, level: 1, abp: 380, maxAbp: 300, status: "master", skill: "構造化" },
+            { id: "linemarketer", name: "LINEマーケター", stars: 2, maxStars: 3, level: 1, abp: 200, maxAbp: 300, status: "training", skill: "導線設計" },
+            { id: "employee", name: "会社員（一般）", stars: 3, maxStars: 3, level: 5, abp: 999, maxAbp: 999, status: "master", skill: "安定供給" },
+            { id: "manager", name: "会社員（管理）", stars: 0, maxStars: 3, level: 0, abp: 0, maxAbp: 120, status: "locked", skill: "合意形成" },
+          ]
+        },
+        expansion: {
+          name: "土のクリスタル",
+          subtitle: "拡張・影響力",
+          color: "#a78bfa",
+          jobs: [
+            { id: "coach", name: "コーチ", stars: 2, maxStars: 3, level: 1, abp: 200, maxAbp: 300, status: "training", skill: "問い" },
+            { id: "investor", name: "投資家", stars: 0, maxStars: 3, level: 0, abp: 0, maxAbp: 120, status: "locked", skill: "待つ力" },
+            { id: "entrepreneur", name: "起業家", stars: 1, maxStars: 3, level: 1, abp: 80, maxAbp: 120, status: "training", skill: "構想力" },
+            { id: "ceo", name: "経営者", stars: 0, maxStars: 3, level: 0, abp: 0, maxAbp: 120, status: "locked", skill: "判断" },
+            { id: "friend", name: "友人", stars: 1, maxStars: 3, level: 0, abp: 30, maxAbp: 120, status: "training", skill: "伴走" },
+          ]
+        }
+      },
+      activeCrystal: 'family'
+    };
+
+    function loadState() {
+      const saved = localStorage.getItem('lifeRpgState');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        state = { ...state, ...parsed };
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem('lifeRpgState', JSON.stringify(state));
+    }
+
+    // HP/MP減衰を計算・適用
+    function applyDailyDecay(yesterdayAbp) {
+      const { baseHpDecay, baseMpDecay, thresholds } = DECAY_CONFIG;
+      
+      // ABPによる軽減を計算
+      let reduction = 0;
+      for (const t of thresholds) {
+        if (yesterdayAbp >= t.abp) {
+          reduction = t.reduction;
+          break;
+        }
+      }
+      
+      // 実際の減衰を計算
+      const actualHpDecay = Math.max(0, baseHpDecay - reduction);
+      const actualMpDecay = Math.max(0, baseMpDecay - reduction);
+      
+      // HP/MPを減少
+      state.hp = Math.max(0, state.hp - actualHpDecay);
+      state.mp = Math.max(0, state.mp - actualMpDecay);
+      
+      // 減衰情報を保存（表示用）
+      state.lastDecayInfo = {
+        yesterdayAbp,
+        baseDecay: { hp: baseHpDecay, mp: baseMpDecay },
+        reduction,
+        actualDecay: { hp: actualHpDecay, mp: actualMpDecay }
+      };
+      
+      return state.lastDecayInfo;
+    }
+
+    // 減衰情報を表示
+    function showDecayInfo() {
+      const info = state.lastDecayInfo;
+      if (!info) {
+        document.getElementById('decay-info').classList.add('hidden');
+        return;
+      }
+      
+      document.getElementById('decay-base').textContent = `HP -${info.baseDecay.hp}, MP -${info.baseDecay.mp}`;
+      document.getElementById('decay-prevented').textContent = info.reduction > 0 
+        ? `+${info.reduction} (ABP ${info.yesterdayAbp}達成)` 
+        : '0';
+      document.getElementById('decay-actual').textContent = info.actualDecay.hp === 0 && info.actualDecay.mp === 0
+        ? '減衰なし！'
+        : `HP -${info.actualDecay.hp}, MP -${info.actualDecay.mp}`;
+      
+      if (info.reduction >= 5) {
+        document.getElementById('decay-actual').classList.add('decay-prevented');
+      } else {
+        document.getElementById('decay-actual').classList.remove('decay-prevented');
+      }
+      
+      document.getElementById('decay-info').classList.remove('hidden');
+    }
+
+    function calculateAge() {
+      const birthDate = new Date(1985, 2, 11);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age;
+    }
+
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('current-date').textContent = now.toLocaleDateString('ja-JP');
+      document.getElementById('current-time').textContent = now.toLocaleTimeString('ja-JP');
+      document.getElementById('player-level').textContent = calculateAge();
+    }
+
+    function getStatusMessage() {
+      if (state.hp < 30 || state.mp < 30) return { msg: "⚠️ 休養モード", color: "#f87171" };
+      if (state.hp < 50) return { msg: "無理しない", color: "#fcd34d" };
+      if (state.mp < 50) return { msg: "考えない", color: "#a78bfa" };
+      return { msg: "絶好調", color: "#4ade80" };
+    }
+
+    function updateStats() {
+      const hpColor = state.hp >= 70 ? '#4ade80' : state.hp >= 40 ? '#fcd34d' : '#f87171';
+      const mpColor = state.mp >= 70 ? '#60a5fa' : state.mp >= 40 ? '#a78bfa' : '#f87171';
+      
+      document.getElementById('hp-value').textContent = state.hp + '%';
+      document.getElementById('hp-value').style.color = hpColor;
+      document.getElementById('hp-bar').style.width = state.hp + '%';
+      document.getElementById('hp-bar').style.background = hpColor;
+      
+      document.getElementById('mp-value').textContent = state.mp + '%';
+      document.getElementById('mp-value').style.color = mpColor;
+      document.getElementById('mp-bar').style.width = state.mp + '%';
+      document.getElementById('mp-bar').style.background = mpColor;
+      
+      const status = getStatusMessage();
+      const badge = document.getElementById('status-badge');
+      badge.textContent = status.msg;
+      badge.style.borderColor = status.color;
+      badge.style.color = status.color;
+      badge.style.background = status.color + '22';
+      
+      document.getElementById('weekly-abp').textContent = state.weeklyAbp;
+    }
+
+    function getJobColor(jobId) {
+      for (const crystal of Object.values(state.jobs)) {
+        const job = crystal.jobs.find(j => j.id === jobId);
+        if (job) return crystal.color;
+      }
+      return '#4ade80';
+    }
+
+    function renderQuests() {
+      const container = document.getElementById('quest-list');
+      const completed = state.quests.filter(q => q.completed).length;
+      document.getElementById('quest-count').textContent = `${completed}/${state.quests.length}`;
+      
+      if (state.quests.length === 0) {
+        container.innerHTML = '<div class="empty-state">クエストがありません<br>下のボタンから追加しましょう</div>';
+        return;
+      }
+      
+      container.innerHTML = state.quests.map((q, index) => `
+        <div class="quest-item ${q.completed ? 'completed' : ''}" style="border-left: 3px solid ${q.color || '#4ade80'};">
+          <span class="quest-check" onclick="toggleQuest(${index})">${q.completed ? '✅' : '⬜'}</span>
+          <div class="quest-content" onclick="toggleQuest(${index})">
+            <div class="quest-text">${q.icon || ''} ${q.name}</div>
+            <div class="quest-job" style="color: ${q.color || '#9ca3af'};">${q.jobName}</div>
+          </div>
+          <span class="quest-level pixel-font">Lv${q.level}</span>
+          <button class="quest-delete" onclick="deleteQuest(${index}); event.stopPropagation();">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function toggleQuest(index) {
+      const quest = state.quests[index];
+      if (quest) {
+        quest.completed = !quest.completed;
+        if (quest.completed) {
+          const abpMap = { 1: 1, 2: 3, 3: 5, 4: 8, 5: 13 };
+          const abp = abpMap[quest.level] || 1;
+          state.todayAbp += abp;
+          state.weeklyAbp += abp;
+          state.totalAbp += abp;
+          
+          updateJobAbp(quest.jobId, abp);
+          
+          state.actionLog.push({
+            time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
+            job: quest.jobName,
+            ability: quest.name,
+            abp: abp,
+            color: quest.color
+          });
+          
+          showToast(abp);
+        }
+        renderQuests();
+        updateStats();
+        updateAbpDisplay();
+        saveState();
+      }
+    }
+
+    function deleteQuest(index) {
+      state.quests.splice(index, 1);
+      renderQuests();
+      saveState();
+    }
+
+    function updateJobAbp(jobId, abp) {
+      for (const crystal of Object.values(state.jobs)) {
+        const job = crystal.jobs.find(j => j.id === jobId);
+        if (job) {
+          const oldAbp = job.abp;
+          job.abp += abp;
+          checkLevelUp(job, oldAbp);
+          break;
+        }
+      }
+    }
+
+    function openQuestModal() {
+      const modal = document.getElementById('quest-modal');
+      const content = document.getElementById('quest-modal-content');
+      
+      let html = '';
+      
+      Object.entries(state.jobs).forEach(([crystalKey, crystal]) => {
+        html += `
+          <div class="crystal-section" style="border: 1px solid ${crystal.color};">
+            <div class="crystal-header">
+              <div class="crystal-icon" style="background: ${crystal.color}33; border-color: ${crystal.color};"></div>
+              <span class="crystal-name" style="color: ${crystal.color};">${crystal.name}</span>
+            </div>
+            <div class="ability-list">
+        `;
+        
+        crystal.jobs.forEach(job => {
+          if (job.status === 'locked') return;
+          
+          const abilities = jobAbilities[job.id]?.abilities || [];
+          abilities.forEach(ability => {
+            const levelColors = { 1: '#4ade80', 2: '#60a5fa', 3: '#fcd34d', 4: '#fb923c', 5: '#a78bfa' };
+            const color = levelColors[ability.level] || '#4ade80';
+            
+            html += `
+              <div class="ability-item" onclick="addQuestFromAbility('${job.id}', '${job.name}', '${ability.name}', '${ability.desc}', ${ability.level}, '${ability.icon}', '${crystal.color}')">
+                <span class="ability-icon">${ability.icon}</span>
+                <div class="ability-content">
+                  <div class="ability-name">${ability.name}</div>
+                  <div class="ability-desc">${job.name} - ${ability.desc}</div>
+                </div>
+                <span class="ability-level pixel-font" style="background: ${color}22; color: ${color};">Lv${ability.level}</span>
+              </div>
+            `;
+          });
+        });
+        
+        html += '</div></div>';
+      });
+      
+      content.innerHTML = html;
+      modal.classList.remove('hidden');
+    }
+
+    function closeQuestModal(event) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById('quest-modal').classList.add('hidden');
+    }
+
+    function addQuestFromAbility(jobId, jobName, abilityName, desc, level, icon, color) {
+      const exists = state.quests.some(q => q.jobId === jobId && q.name === abilityName && !q.completed);
+      if (exists) {
+        alert('このクエストは既に追加されています');
+        return;
+      }
+      
+      state.quests.push({
+        id: Date.now(),
+        jobId: jobId,
+        jobName: jobName,
+        name: abilityName,
+        desc: desc,
+        level: level,
+        icon: icon,
+        color: color,
+        completed: false
+      });
+      
+      renderQuests();
+      saveState();
+      closeQuestModal();
+      showToast(0);
+      document.querySelector('.toast-icon').textContent = '✨';
+      document.querySelector('.toast-text').textContent = 'クエスト追加!';
+      document.querySelector('.toast-abp').textContent = abilityName;
+      setTimeout(() => {
+        document.querySelector('.toast-icon').textContent = '⚡';
+        document.querySelector('.toast-text').textContent = 'ABP獲得!';
+      }, 1500);
+    }
+
+    function renderTrainingJobs() {
+      const container = document.getElementById('training-jobs');
+      const trainingJobs = [];
+      Object.values(state.jobs).forEach(crystal => {
+        crystal.jobs.forEach(job => {
+          if (job.status === 'training') {
+            trainingJobs.push({ ...job, color: crystal.color });
+          }
+        });
+      });
+      
+      container.innerHTML = trainingJobs.map(job => `
+        <span style="padding: 6px 12px; border-radius: 20px; font-size: 11px; border: 1px solid ${job.color}; color: ${job.color}; background: ${job.color}22;">
+          ${job.name}
+        </span>
+      `).join('');
+    }
+
+    function renderCrystalTabs() {
+      const container = document.getElementById('crystal-tabs');
+      container.innerHTML = Object.entries(state.jobs).map(([key, crystal]) => `
+        <button class="crystal-tab ${state.activeCrystal === key ? 'active' : ''}" 
+                style="border-color: ${crystal.color}; color: ${crystal.color};"
+                onclick="selectCrystal('${key}')">
+          ${crystal.name.replace('のクリスタル', '')}
+        </button>
+      `).join('');
+    }
+
+    function selectCrystal(key) {
+      state.activeCrystal = key;
+      renderCrystalTabs();
+      renderJobGrid();
+    }
+
+    function renderJobGrid() {
+      const container = document.getElementById('job-grid');
+      const crystal = state.jobs[state.activeCrystal];
+      
+      container.innerHTML = crystal.jobs.map(job => {
+        const isSelected = state.selectedJob?.id === job.id;
+        const stars = '★'.repeat(job.stars) + '☆'.repeat(job.maxStars - job.stars);
+        const statusText = {
+          'master': '🎉 MASTER',
+          'training': '🔥 育成中',
+          'locked': '🔒 未解放',
+          '休止': '⏸ 休止'
+        }[job.status] || '';
+        
+        return `
+          <div class="job-card ${isSelected ? 'selected' : ''} ${job.status === 'locked' ? 'locked' : ''}"
+               onclick="selectJob('${state.activeCrystal}', '${job.id}')">
+            <div class="job-header">
+              <div class="job-name">${job.name}</div>
+              <div class="job-stars" style="color: ${crystal.color};">${stars}</div>
+            </div>
+            <div class="job-skill">${job.skill}</div>
+            <div class="job-status" style="color: ${job.status === 'master' ? '#fcd34d' : job.status === 'training' ? '#4ade80' : '#6b7280'};">
+              ${statusText}
+            </div>
+            <div class="job-progress">
+              <div class="job-progress-fill" style="width: ${Math.min((job.abp / job.maxAbp) * 100, 100)}%; background: ${crystal.color};"></div>
+            </div>
+            <div style="font-size: 8px; color: #6b7280; margin-top: 4px; text-align: right;">
+              ${job.abp >= 999 ? 'MAX' : job.abp + '/' + job.maxAbp} ABP
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectJob(crystalKey, jobId) {
+      const job = state.jobs[crystalKey].jobs.find(j => j.id === jobId);
+      if (job && job.status !== 'locked') {
+        state.selectedJob = { ...job, crystalKey, color: state.jobs[crystalKey].color };
+        renderJobGrid();
+        updateSelectedJobDisplay();
+        saveState();
+        showScreen('abp');
+      }
+    }
+
+    function updateSelectedJobDisplay() {
+      if (state.selectedJob) {
+        document.getElementById('selected-job-name').textContent = state.selectedJob.name;
+        document.getElementById('selected-job-name').style.color = state.selectedJob.color;
+        document.getElementById('selected-job-abp').textContent = `ABP: ${state.selectedJob.abp}/${state.selectedJob.maxAbp}`;
+      } else {
+        document.getElementById('selected-job-name').textContent = 'ジョブを選択';
+        document.getElementById('selected-job-name').style.color = '#fcd34d';
+        document.getElementById('selected-job-abp').textContent = 'ABP: --/--';
+      }
+    }
+
+    function updateAbpDisplay() {
+      document.getElementById('today-abp').textContent = state.todayAbp;
+      document.getElementById('total-abp').textContent = state.totalAbp.toLocaleString();
+      
+      const logContainer = document.getElementById('action-log');
+      if (state.actionLog.length > 0) {
+        logContainer.innerHTML = state.actionLog.slice(-5).reverse().map(log => `
+          <div style="padding: 6px 0; border-bottom: 1px solid #374151;">
+            <span>${log.time}</span> - 
+            <span style="color: ${log.color || '#4ade80'};">${log.job}</span>
+            ${log.ability ? `<span style="color: #9ca3af;"> (${log.ability})</span>` : ''}
+            <span style="color: #4ade80;"> +${log.abp} ABP</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function addAbp(amount) {
+      if (!state.selectedJob) {
+        alert('先にジョブを選択してください');
+        showScreen('jobs');
+        return;
+      }
+      
+      const canDoLevel = getMaxAllowedLevel();
+      const levelMap = { 1: 1, 3: 2, 5: 3, 8: 4, 13: 5 };
+      const requiredLevel = levelMap[amount] || 1;
+      
+      if (requiredLevel > canDoLevel) {
+        alert(`現在のHP/MPではLv${requiredLevel}の行動はできません。\n回復行動を行うか、低いレベルの行動を選んでください。`);
+        return;
+      }
+      
+      state.todayAbp += amount;
+      state.weeklyAbp += amount;
+      state.totalAbp += amount;
+      
+      const crystal = state.jobs[state.selectedJob.crystalKey];
+      const job = crystal.jobs.find(j => j.id === state.selectedJob.id);
+      if (job) {
+        const oldAbp = job.abp;
+        job.abp += amount;
+        state.selectedJob.abp = job.abp;
+        checkLevelUp(job, oldAbp);
+      }
+      
+      state.actionLog.push({
+        time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
+        job: state.selectedJob.name,
+        abp: amount,
+        color: state.selectedJob.color
+      });
+      
+      showToast(amount);
+      updateAbpDisplay();
+      updateSelectedJobDisplay();
+      updateStats();
+      saveState();
+    }
+
+    function getMaxAllowedLevel() {
+      if (state.hp < 30 || state.mp < 30) return 1;
+      if (state.hp < 50 || state.mp < 50) return 2;
+      if (state.hp < 80 || state.mp < 50) return 3;
+      if (state.hp < 80 || state.mp < 80) return 4;
+      return 5;
+    }
+
+    function checkLevelUp(job, oldAbp) {
+      const thresholds = [30, 120, 300];
+      const oldStars = thresholds.filter(t => oldAbp >= t).length;
+      const newStars = thresholds.filter(t => job.abp >= t).length;
+      
+      if (newStars > oldStars && newStars <= 3) {
+        job.stars = newStars;
+        if (newStars === 3) {
+          job.status = 'master';
+        }
+        showLevelUp(job.name, oldStars, newStars);
+      }
+    }
+
+    function showLevelUp(jobName, oldStars, newStars) {
+      document.getElementById('level-up-job').textContent = jobName;
+      document.getElementById('level-up-stars').textContent = 
+        '★'.repeat(oldStars) + '☆'.repeat(3 - oldStars) + ' → ' +
+        '★'.repeat(newStars) + '☆'.repeat(3 - newStars);
+      document.getElementById('level-up-overlay').classList.remove('hidden');
+    }
+
+    function closeLevelUp() {
+      document.getElementById('level-up-overlay').classList.add('hidden');
+      renderJobGrid();
+      renderTrainingJobs();
+    }
+
+    function showToast(abp) {
+      const toast = document.getElementById('toast');
+      toast.querySelector('.toast-abp').textContent = '+' + abp;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 1500);
+    }
+
+    function adjustStat(stat, amount) {
+      if (stat === 'hp') {
+        state.hp = Math.max(0, Math.min(100, state.hp + amount));
+      } else {
+        state.mp = Math.max(0, Math.min(100, state.mp + amount));
+      }
+      updateStats();
+      saveState();
+    }
+
+    function doRecovery(type, hpGain, mpGain) {
+      state.hp = Math.min(100, state.hp + hpGain);
+      state.mp = Math.min(100, state.mp + mpGain);
+      updateStats();
+      saveState();
+      
+      showToast(0);
+      document.querySelector('.toast-icon').textContent = '💚';
+      document.querySelector('.toast-text').textContent = '回復!';
+      document.querySelector('.toast-abp').textContent = `HP+${hpGain} MP+${mpGain}`;
+      setTimeout(() => {
+        document.querySelector('.toast-icon').textContent = '⚡';
+        document.querySelector('.toast-text').textContent = 'ABP獲得!';
+      }, 1500);
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen-' + screenId).classList.add('active');
+      
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelector(`[data-screen="${screenId}"]`).classList.add('active');
+    }
+
+    function init() {
+      loadState();
+      
+      // 日次リセット処理
+      const now = new Date();
+      const lastReset = localStorage.getItem('lastDailyReset');
+      const today = now.toDateString();
+      
+      if (lastReset !== today) {
+        // 昨日のABPを保存
+        const yesterdayAbp = state.todayAbp;
+        
+        // 減衰を適用
+        applyDailyDecay(yesterdayAbp);
+        
+        // 日次データをリセット
+        state.yesterdayAbp = yesterdayAbp;
+        state.todayAbp = 0;
+        state.actionLog = [];
+        state.quests = state.quests.filter(q => !q.completed);
+        
+        // 週次リセット（月曜日）
+        if (now.getDay() === 1) {
+          const lastWeeklyReset = localStorage.getItem('lastWeeklyReset');
+          const thisWeek = now.toISOString().slice(0, 10);
+          if (lastWeeklyReset !== thisWeek) {
+            state.weeklyAbp = 0;
+            localStorage.setItem('lastWeeklyReset', thisWeek);
+          }
+        }
+        
+        localStorage.setItem('lastDailyReset', today);
+        saveState();
+      }
+      
+      updateTime();
+      setInterval(updateTime, 1000);
+      updateStats();
+      renderQuests();
+      renderTrainingJobs();
+      renderCrystalTabs();
+      renderJobGrid();
+      updateSelectedJobDisplay();
+      updateAbpDisplay();
+      showDecayInfo();
+    }
+
+    init();
+  </script>
+</body>
+</html>
